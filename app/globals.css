@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
@@ -24,3 +28,121 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  /* background seluruh halaman */
+  .bg-mpk {
+    background-image: url('/BackgroundMPK.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  /* kartu krem seperti FE lama */
+  .card-krem {
+    @apply rounded-2xl border shadow-lg;
+    background: #fff7e6;            /* krem muda */
+    border-color: #f3e9d6;           /* garis tipis */
+  }
+
+  /* watermark logo 50th di dalam card */
+  .wm-50::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('/LogoMPK50th.png') center/380px no-repeat;
+    opacity: 0.09;                   /* tipis */
+    pointer-events: none;
+  }
+  @layer utilities {
+  .bg-mpk {
+    background-image: url('/BackgroundMPK.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  .card-krem {
+    @apply rounded-2xl border shadow-lg;
+    background: #fff7e6;
+    border-color: #f3e9d6;
+  }
+
+  /* watermark logo 50th di card (diperbesar & ditipiskan) */
+  .wm-50::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('/LogoMPK50th.png') center/520px no-repeat;
+    opacity: 0.06;                  /* lebih tipis dari sebelumnya */
+    pointer-events: none;
+  }
+
+  /* tombol */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold text-white;
+    background: #c9720a;
+  }
+  .btn-primary:hover { filter: brightness(0.95); }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold border;
+    background: #fff3da;
+    border-color: #d9c8aa;
+    color: #6b4a1a;
+  }
+
+  /* text lead & chip */
+  .lead { color:#7a6040; }
+  .chip {
+    @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium;
+    background:#fff3da; border-color:#eadcc6; color:#6b4a1a;
+  }
+
+  .divider {
+    height:1px; background: linear-gradient(90deg, transparent, #eadcc6, transparent);
+  }
+}
+@layer utilities {
+  .scene {
+    perspective: 1400px;
+  }
+  .book {
+    transform-style: preserve-3d;
+    transition: transform .7s ease, box-shadow .7s ease;
+  }
+  .book-shadow {
+    box-shadow: 0 30px 60px rgba(0,0,0,.12);
+  }
+  .book.open {
+    transform: rotateY(-22deg) rotateX(4deg) translateZ(0);
+  }
+  .book-closed {
+    transform: rotateY(-60deg) rotateX(6deg);
+  }
+  .sheet {
+    position: absolute; inset: 0; transform-style: preserve-3d;
+  }
+  .page {
+    position: absolute; inset: 0; background: #fff;
+    border-radius: 14px; overflow: hidden;
+  }
+  .cover-front, .cover-back {
+    backface-visibility: hidden;
+  }
+  .cover-front {
+    transform: translateZ(2px);
+    background: #fff;
+  }
+  .cover-back {
+    transform: rotateY(180deg) translateZ(2px);
+    background: #fff;
+  }
+
+  .slot-box { @apply absolute rounded-md border-2 border-dashed border-[#d9c8aa]; }
+  .slot-selected { @apply border-[#c9720a] bg-[#c9720a]/10 shadow-[0_0_0_4px_rgba(201,114,10,.2)]; }
+}
+
+
+}
+
