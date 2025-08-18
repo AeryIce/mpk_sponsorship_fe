@@ -1,24 +1,24 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { Suspense, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SlotCard, { SlotCardProps } from "@/components/SlotCard";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
 type SlotId = SlotCardProps["id"];
 
 const BASE_SIZES = {
-  FULL:    { mm: "210 × 297 mm", cm: "21 × 29.7 cm" },
-  HALF:    { mm: "210 × 148.5 mm", cm: "21 × 14.85 cm" },
+  FULL: { mm: "210 × 297 mm", cm: "21 × 29.7 cm" },
+  HALF: { mm: "210 × 148.5 mm", cm: "21 × 14.85 cm" },
   QUARTER: { mm: "105 × 148.5 mm", cm: "10.5 × 14.85 cm" },
 };
 const COVER_SIZE = { mm: "210 × 297 mm", cm: "21 × 29.7 cm" };
 
 const HARGA = {
   perusahaan: { FULL: 10_000_000, HALF: 5_000_000, QUARTER: 3_000_000 },
-  lpk:        { FULL: 7_500_000,  HALF: 4_000_000, QUARTER: 2_500_000 },
-  cover:      { IFC: 20_000_000,  IBC: 15_000_000, BC_OUT: 25_000_000 },
+  lpk: { FULL: 7_500_000, HALF: 4_000_000, QUARTER: 2_500_000 },
+  cover: { IFC: 20_000_000, IBC: 15_000_000, BC_OUT: 25_000_000 },
 } as const;
 
 const TITLES: Record<SlotId, string> = {
@@ -36,37 +36,34 @@ const IMAGES: Record<SlotId, string> = {
   BC_OUT: "/FullPage.jpeg",
   FULL: "/FullPage.jpeg",
   HALF: "/HalfPage.jpeg",
-  QUARTER: "/QuarterPage.jpeg", // atau ganti ke /QuaterPage.jpeg sesuai file kamu
+  QUARTER: "/QuarterPage.jpeg",
 };
 
-const SponsorApplyForm = dynamic(
-  () => import('@/components/SponsorApplyForm'),
-  { ssr: false }
-);
+// form tetap client-only
+const SponsorApplyForm = dynamic(() => import("@/components/SponsorApplyForm"), {
+  ssr: false,
+});
 
-export default function ApplyPage() {
+/* ----------------------- INNER (pakai useSearchParams) ---------------------- */
+function ApplyPageInner() {
   const [kategori, setKategori] = useState<"perusahaan" | "lpk">("perusahaan");
   const [selected, setSelected] = useState<SlotId | null>(null);
   const params = useSearchParams();
 
-  // ✅ Prefill pilihan dari URL (?slot=...&kategori=...), supaya:
-  // - kalau orang datang via link langsung, preview kanan tetap muncul
-  // - konsisten dengan form yang membaca query param juga
+  // Prefill dari query (?slot=...&kategori=...)
   useEffect(() => {
     const slot = (params.get("slot") || "").toUpperCase() as SlotId;
     const kat = (params.get("kategori") || "").toLowerCase() as "perusahaan" | "lpk";
-    const validSlots: SlotId[] = ["IFC","IBC","BC_OUT","FULL","HALF","QUARTER"];
-    if (validSlots.includes(slot)) setSelected(slot);
+    const valid: SlotId[] = ["IFC", "IBC", "BC_OUT", "FULL", "HALF", "QUARTER"];
+    if (valid.includes(slot)) setSelected(slot);
     if (kat === "perusahaan" || kat === "lpk") setKategori(kat);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount
+  }, []); // run once
 
-  // siapkan data card + harga label sesuai kategori
   const cards: SlotCardProps[] = useMemo(() => {
-    const price = (id: SlotId) => {
-      if (id === "IFC" || id === "IBC" || id === "BC_OUT") return HARGA.cover[id];
-      return HARGA[kategori][id];
-    };
+    const price = (id: SlotId) =>
+      id === "IFC" || id === "IBC" || id === "BC_OUT" ? HARGA.cover[id] : HARGA[kategori][id];
+
     const size = (id: SlotId) =>
       id === "IFC" || id === "IBC" || id === "BC_OUT" ? COVER_SIZE : BASE_SIZES[id];
 
@@ -83,16 +80,8 @@ export default function ApplyPage() {
     }));
   }, [kategori, selected]);
 
-  const selectedData = selected
-    ? cards.find((c) => c.id === selected)!
-    : null;
-
+  const selectedData = selected ? cards.find((c) => c.id === selected)! : null;
   const isCover = selected === "IFC" || selected === "IBC" || selected === "BC_OUT";
-  const priceNumber = useMemo(() => {
-    if (!selected) return null;
-    if (isCover) return HARGA.cover[selected];
-    return HARGA[kategori][selected];
-  }, [selected, kategori, isCover]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:py-14">
@@ -113,12 +102,7 @@ export default function ApplyPage() {
           Perusahaan
         </label>
         <label className="inline-flex items-center gap-2">
-          <input
-            type="radio"
-            name="kat"
-            checked={kategori === "lpk"}
-            onChange={() => setKategori("lpk")}
-          />
+          <input type="radio" name="kat" checked={kategori === "lpk"} onChange={() => setKategori("lpk")} />
           LPK/Sekolah
         </label>
       </div>
@@ -131,23 +115,17 @@ export default function ApplyPage() {
       </div>
 
       {/* DETAIL PANEL */}
-      {selectedData && (
+      {selectedData ? (
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* KIRI: mockup buku / gambar */}
+          {/* KIRI: mockup/gambar */}
           <div className="lg:col-span-2 rounded-2xl border border-[#eadcc6] bg-white p-3 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={selectedData.image}
-              alt={selectedData.title}
-              className="w-full rounded-xl"
-            />
+            <img src={selectedData.image} alt={selectedData.title} className="w-full rounded-xl" />
           </div>
 
           {/* KANAN: info detail */}
           <aside className="rounded-2xl border border-[#eadcc6] bg-[#fffaf0] p-5 h-fit">
-            <div className="text-sm font-semibold text-[#6b4a1a] mb-1">
-              {selectedData.title}
-            </div>
+            <div className="text-sm font-semibold text-[#6b4a1a] mb-1">{selectedData.title}</div>
             <div className="text-[13px] text-[#7a6040]">
               Ukuran: <span className="font-medium text-[#4e3a18]">{selectedData.sizeCM}</span>{" "}
               <span className="text-[#a4865f]">({selectedData.sizeMM})</span>
@@ -158,12 +136,11 @@ export default function ApplyPage() {
             </div>
 
             <p className="mt-3 text-sm text-[#4e3a1a]">
-              Contoh preview untuk membantu memperkirakan skala dan posisi. Layout final mengikuti
-              template panitia buku kenangan 50 tahun MPK‑KAJ.
+              Contoh preview untuk membantu memperkirakan skala dan posisi. Layout final mengikuti template panitia buku
+              kenangan 50 tahun MPK-KAJ.
             </p>
 
             <div className="mt-5">
-              {/* ⬇️ Tambah anchor #apply-form supaya auto-scroll ke form */}
               <Link
                 href={`/sponsorship/apply?slot=${selectedData.id}&kategori=${kategori}#apply-form`}
                 className="btn-primary w-full justify-center"
@@ -189,21 +166,17 @@ export default function ApplyPage() {
             </div>
           </aside>
         </section>
+      ) : (
+        <div className="mt-6 text-sm text-[#7a6040]">Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.</div>
       )}
 
-      {/* Info bila belum memilih */}
-      {!selectedData && (
-        <div className="mt-6 text-sm text-[#7a6040]">
-          Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.
-        </div>
-      )}
-
-      {/* ⬇️ FORM APPLY: selalu render di bawah, baca query param untuk prefill */}
+      {/* FORM APPLY */}
       <section id="apply-form" className="max-w-6xl mx-auto mt-12 scroll-mt-20">
         <div className="mb-4">
           <h2 className="text-2xl font-bold tracking-tight text-[#6b4a1a]">Form Pengajuan Sponsorship</h2>
           <p className="text-sm text-[#7a6040] mt-1">
-            Pilihan slot & harga otomatis terisi dari pilihan thumbnail di atas. Jika belum memilih, form akan memberi tahu.
+            Pilihan slot & harga otomatis terisi dari pilihan thumbnail di atas. Jika belum memilih, form akan memberi
+            tahu.
           </p>
         </div>
 
@@ -212,5 +185,18 @@ export default function ApplyPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+/* ------------------------------ PAGE WRAPPER ------------------------------- */
+/** Wajib: bungkus komponen yang memakai useSearchParams di dalam Suspense
+ * agar aman saat prerender di Vercel (mengatasi error:
+ * "useSearchParams() should be wrapped in a suspense boundary").
+ */
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={null}>
+      <ApplyPageInner />
+    </Suspense>
   );
 }
