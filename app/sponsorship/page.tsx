@@ -28,7 +28,7 @@ export default function SponsorshipIndex() {
       {/* HERO singkat */}
       <div className="text-center mb-6">
         <h2 className="text-3xl md:text-4xl font-extrabold text-[#6b4a1a]">
-          Pesta Puncak Ulang Tahun ke‑50 MPK‑KAJ
+          Pesta Puncak Ulang Tahun ke-50 MPK-KAJ
         </h2>
         <p className="mt-2 text-[#7a6040]">
           Mari bergabung dalam perayaan dan dukung penerbitan Buku Kenangan 50 Tahun MPK-KAJ.
@@ -47,55 +47,59 @@ export default function SponsorshipIndex() {
 
         {/* Isi kartu */}
         <div className="px-6 md:px-10 py-7 md:py-10">
-          <div className="mb-5">
-            <PageHeader
-              title="Dukungan Menjadi Sponsor Buku Kenangan 50 Tahun MPK‑KAJ"
-              subtitle="Informasi & prakata untuk calon sponsor"
-            />
+          {/* Header halaman (dibesarkan) */}
+          <div className="mb-5 text-left">
+            <h1 className="font-extrabold text-[#6b4a1a] leading-tight
+                          text-[26px] md:text-[34px] lg:text-[38px]">
+              <span className="block">Dukungan Menjadi Sponsor</span>
+              <span className="block">Buku Kenangan 50 Tahun MPK-KAJ</span>
+            </h1>
           </div>
+          {/* GRID 3 kolom: kiri (2) + kanan (1); teaser dipindah ke kiri agar aside naik */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Kolom kiri: teaser (compact) + prakata */}
+            <div className="lg:col-span-2 space-y-5">
+              {/* TEASER / PANCINGAN (compact) */}
+              <div className="rounded-xl border border-[#eadcc6] bg-[#fff3da] p-3 md:p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-xl md:text-2xl select-none">✨</div>
+                  <div className="text-[#4e3a18]">
+                    <p className="font-semibold text-[#6b4a1a] leading-snug">
+                      Tunjukkan kepedulian <em>brand</em> Anda di momen 50 tahun MPK-KAJ — dapatkan
+                      eksposur ke jaringan sekolah & komunitas pendidikan.
+                    </p>
+                    <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                      <li>• Penempatan premium: <em>IFC, IBC, Back Cover</em></li>
+                      <li>• Opsi <em>Full / Half / Quarter Page</em></li>
+                      <li>• Momentum historis & sarat emosi positif</li>
+                      <li>• Desain dimuat dalam <em>layout</em> elegan & rapi</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
 
-          {/* 1) TEASER / PANCINGAN */}
-          <div className="mb-6 rounded-xl border border-[#eadcc6] bg-[#fff3da] p-4 md:p-5">
-            <div className="flex items-start gap-4">
-              <div className="text-2xl select-none">✨</div>
-              <div className="text-[#4e3a18]">
-                <p className="font-semibold text-[#6b4a1a]">
-                  Tunjukkan kepedulian <em>brand</em> Anda di momen 50 tahun MPK‑KAJ —
-                  dapatkan eksposur ke jaringan sekolah & komunitas pendidikan.
-                </p>
-                <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                  <li>• Penempatan premium: <em>IFC, IBC, Back Cover</em></li>
-                  <li>• Opsi <em>Full / Half / Quarter Page</em></li>
-                  <li>• Momentum historis & sarat emosi positif</li>
-                  <li>• Desain dimuat dalam <em>layout</em> elegan & rapi</li>
-                </ul>
+              {/* PRAKATA */}
+              <div className="space-y-5 leading-relaxed text-[17px] md:text-[19px] text-[#4e3a18]">
+
+                {PRAKATA.trim().split("\n").map((p, i) =>
+                  p ? <p key={i}>{parse(p)}</p> : <br key={i} />
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Layout 2 kolom agar tidak “kurus” */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Kolom teks */}
-            <div className="lg:col-span-2 space-y-4 leading-relaxed text-[15px] md:text-base text-[#4e3a18]">
-            {PRAKATA.trim().split("\n").map((p, i) =>
-                p ? <p key={i}>{parse(p)}</p> : <br key={i} />
-                )}
-
-            </div>
-
-            {/* Kolom highlight ringkas */}
-            <aside className="rounded-2xl border border-[#eadcc6] bg-[#fffaf0] p-5 md:p-6">
+            {/* Kolom kanan: aside (naik ke atas) */}
+            <aside className="rounded-2xl border border-[#eadcc6] bg-[#fffaf0] p-5 md:p-6 h-fit">
               <div className="text-sm font-semibold text-[#6b4a1a] mb-3">
                 Mengapa beriklan di Buku Kenangan?
               </div>
               <ul className="space-y-2 text-sm text-[#58421c]">
-                <li>• Visibilitas ke jaringan MPK‑KAJ</li>
+                <li>• Visibilitas ke jaringan MPK-KAJ</li>
                 <li>• Paket jelas & fleksibel</li>
                 <li>• Audiens tepat & kredibel</li>
                 <li>• Momentum 50 tahun — sekali seumur organisasi</li>
               </ul>
-              
-            <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md text-gray-800">
+
+              <div className="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md text-gray-800">
                 <p className="font-semibold">Pembayaran via VA BAKKAT</p>
                 <p className="text-sm mb-3">(detail VA disampaikan panitia)</p>
 
@@ -103,37 +107,51 @@ export default function SponsorshipIndex() {
 
                 {/* WhatsApp */}
                 <a
-                    href="https://wa.me/628161604132"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-green-600 hover:underline mb-2"
+                  href="https://wa.me/628161604132"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-green-600 hover:underline mb-2"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0C5.372 0 0 5.373 0 12c0 2.116.552 4.19 1.6 6.021L.06 24l6.165-1.515A11.937 11.937 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.994 0-3.927-.53-5.626-1.533l-.403-.24-3.653.898.976-3.562-.263-.414A9.797 9.797 0 0 1 2.182 12C2.182 6.5 6.5 2.182 12 2.182S21.818 6.5 21.818 12 17.5 21.818 12 21.818z"/>
                     <path d="M17.498 14.582c-.297-.148-1.758-.867-2.03-.967-.272-.099-.47-.148-.668.148-.197.297-.767.966-.94 1.164-.173.198-.347.223-.644.075-.297-.148-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.057-.173-.297-.018-.458.13-.605.134-.133.297-.347.446-.52.148-.174.198-.297.297-.495.099-.198.05-.372-.025-.52-.075-.148-.668-1.611-.915-2.205-.24-.576-.484-.498-.668-.508l-.57-.01c-.198 0-.52.074-.793.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.148.198 2.095 3.201 5.08 4.487.709.306 1.262.489 1.693.625.712.227 1.36.195 1.872.118.571-.085 1.758-.718 2.007-1.411.248-.693.248-1.287.173-1.411-.074-.124-.272-.198-.57-.347z"/>
-                    </svg>
-                    0816-1604-132
+                  </svg>
+                  0816-1604-132
                 </a>
 
                 {/* Email */}
                 <a
-                    href="mailto:johannesromiyono@gmail.com"
-                    className="flex items-center text-blue-600 hover:underline"
+                  href="mailto:johannesromiyono@gmail.com"
+                  className="flex items-center text-blue-600 hover:underline"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 13.065L.075 4.5h23.85L12 13.065zM0 6.597V19.5h24V6.597l-12 8.568L0 6.597z"/>
-                    </svg>
-                    johannesromiyono@gmail.com
+                  </svg>
+                  johannesromiyono@gmail.com
                 </a>
-                </div>
+              </div>
 
-
-                
-
+              {/* Card BAKKAT Info */}
+              <div className="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-md text-gray-800 text-sm leading-relaxed">
+                <p>
+                  <strong>BAKKAT</strong> adalah Badan Keagamaan Katolik satu-satunya yang
+                  diakui Pemerintah, yang dapat menerima dan menyalurkan dana donasi.
+                </p>
+                <p className="mt-2">
+                  Donasi ini dapat diperhitungkan sebagai <strong>pengurang Penghasilan Kena Pajak</strong>,
+                  sesuai ketentuan yang berlaku dalam Pasal 9 ayat 1 huruf g Undang-Undang Nomor 7 Tahun 1983
+                  tentang Pajak Penghasilan, sebagaimana telah beberapa kali diubah, dan terakhir dengan
+                  Undang-Undang Nomor 7 Tahun 2021.
+                </p>
+                <p className="mt-2">
+                  BAKKAT akan menerbitkan <strong>Bukti Penerimaan Amal Kasih</strong>, sehingga perusahaan
+                  tidak memotong Pajak atas donasi ini.
+                </p>
+              </div>
             </aside>
           </div>
 
-          {/* 2) CTA BUTTON LEBIH MENONJOL */}
+          {/* CTA */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/sponsorship/apply"

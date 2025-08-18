@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import SlotCard, { SlotCardProps } from "@/components/SlotCard";
+import dynamic from 'next/dynamic';
 
 type SlotId = SlotCardProps["id"];
 
@@ -37,9 +39,27 @@ const IMAGES: Record<SlotId, string> = {
   QUARTER: "/QuarterPage.jpeg", // atau ganti ke /QuaterPage.jpeg sesuai file kamu
 };
 
+const SponsorApplyForm = dynamic(
+  () => import('@/components/SponsorApplyForm'),
+  { ssr: false }
+);
+
 export default function ApplyPage() {
   const [kategori, setKategori] = useState<"perusahaan" | "lpk">("perusahaan");
   const [selected, setSelected] = useState<SlotId | null>(null);
+  const params = useSearchParams();
+
+  // ✅ Prefill pilihan dari URL (?slot=...&kategori=...), supaya:
+  // - kalau orang datang via link langsung, preview kanan tetap muncul
+  // - konsisten dengan form yang membaca query param juga
+  useEffect(() => {
+    const slot = (params.get("slot") || "").toUpperCase() as SlotId;
+    const kat = (params.get("kategori") || "").toLowerCase() as "perusahaan" | "lpk";
+    const validSlots: SlotId[] = ["IFC","IBC","BC_OUT","FULL","HALF","QUARTER"];
+    if (validSlots.includes(slot)) setSelected(slot);
+    if (kat === "perusahaan" || kat === "lpk") setKategori(kat);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount
 
   // siapkan data card + harga label sesuai kategori
   const cards: SlotCardProps[] = useMemo(() => {
@@ -106,7 +126,7 @@ export default function ApplyPage() {
       {/* GRID SLOT */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
         {cards.map((c) => (
-          <SlotCard key={c.id} {...c} />
+          <SlotCard key={`${c.id}-${kategori}`} {...c} />
         ))}
       </div>
 
@@ -137,14 +157,15 @@ export default function ApplyPage() {
               {isCover && <span className="text-xs font-semibold text-[#7a6040]">(Cover • Premium)</span>}
             </div>
 
-            <p className="mt-3 text-sm text-[#4e3a18]">
+            <p className="mt-3 text-sm text-[#4e3a1a]">
               Contoh preview untuk membantu memperkirakan skala dan posisi. Layout final mengikuti
               template panitia buku kenangan 50 tahun MPK‑KAJ.
             </p>
 
             <div className="mt-5">
+              {/* ⬇️ Tambah anchor #apply-form supaya auto-scroll ke form */}
               <Link
-                href={`/sponsorship/apply?slot=${selectedData.id}&kategori=${kategori}`}
+                href={`/sponsorship/apply?slot=${selectedData.id}&kategori=${kategori}#apply-form`}
                 className="btn-primary w-full justify-center"
               >
                 Pilih Slot Ini
@@ -176,6 +197,20 @@ export default function ApplyPage() {
           Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.
         </div>
       )}
+
+      {/* ⬇️ FORM APPLY: selalu render di bawah, baca query param untuk prefill */}
+      <section id="apply-form" className="max-w-6xl mx-auto mt-12 scroll-mt-20">
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold tracking-tight text-[#6b4a1a]">Form Pengajuan Sponsorship</h2>
+          <p className="text-sm text-[#7a6040] mt-1">
+            Pilihan slot & harga otomatis terisi dari pilihan thumbnail di atas. Jika belum memilih, form akan memberi tahu.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#eadcc6] bg-white p-4 md:p-6 shadow-sm">
+          <SponsorApplyForm />
+        </div>
+      </section>
     </main>
   );
 }
