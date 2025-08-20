@@ -75,7 +75,7 @@ export default function SponsorApplyForm() {
       slot_label: selected.label,        // Label enak dibaca
       slot_section: selected.section,    // cover / inside
       slot_size: selected.size,          // full / half / quarter
-      slot_price: price ?? 0,            // ❗ angka IDR dinamis
+      slot_price: price ?? 0,            // FE hanya info; BE akan hitung ulang
       kategori: kategoriParam,           // perusahaan / lpk
 
       // data perusahaan
@@ -102,10 +102,52 @@ export default function SponsorApplyForm() {
 
     try {
       setSubmitting(true);
-      // TODO (next step): sambung ke BE endpoint /api/sponsorship/apply
-      console.log('[SPONSORSHIP_APPLY_PAYLOAD]', payload);
-      alert('Terima kasih! Data apply sponsorship Anda sudah kami terima.');
+
+      // ===== API BASE (ketat, wajib absolut) =====
+      const API_BASE_ENV =
+        process.env.NEXT_PUBLIC_API_BASE ??
+        (process.env.NEXT_PUBLIC_BACKEND_URL
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/$/, '')}/api`
+          : '');
+
+      const API_BASE = (API_BASE_ENV || '').replace(/\/$/, '');
+      if (!/^https?:\/\//i.test(API_BASE)) {
+        console.error('[API_BASE] invalid:', API_BASE);
+        alert('Konfigurasi API belum benar. Set NEXT_PUBLIC_API_BASE ke https://mpkbackend-production.up.railway.app/api');
+        return;
+      }
+
+      const url = `${API_BASE}/sponsorship/apply`;
+      console.log('[POST]', url, payload);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'omit', // API public, tidak butuh cookie/CSRF
+      });
+
+      // Parser respons yang tahan banting (kalau bukan JSON tetap kebaca)
+      const raw = await res.text();
+      let out: any = null; try { out = JSON.parse(raw); } catch {}
+      console.log('[RESPONSE]', res.status, raw);
+
+      if (!res.ok) {
+        const msg = out?.message || raw || `Gagal mengirim pengajuan sponsorship (HTTP ${res.status}).`;
+        throw new Error(msg);
+      }
+
+      const ticket = out?.ticket ?? out?.data?.ticket ?? '—';
+      alert(
+        `Terima kasih! Pengajuan tersimpan.\n` +
+        `Ticket: ${ticket}\n` +
+        `Kami sudah mengirim email konfirmasi ke ${payload.company_email}.`
+      );
+
       form.reset();
+    } catch (err: any) {
+      console.error('[SPONSORSHIP_APPLY_ERROR]', err);
+      alert(err?.message || 'Terjadi kesalahan. Mohon coba lagi.');
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +255,7 @@ export default function SponsorApplyForm() {
               {isSubmitting ? 'Mengirim…' : 'Kirim Pengajuan'}
             </button>
             <span className="text-xs text-slate-500">
-              Setelah submit, tim kami akan follow‑up via email/WhatsApp.
+              Setelah submit, tim kami akan follow-up via email/WhatsApp.
             </span>
           </div>
         </form>
