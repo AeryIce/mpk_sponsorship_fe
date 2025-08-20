@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 type SlotKey = 'IFC' | 'IBC' | 'BC_OUT' | 'FULL' | 'HALF' | 'QUARTER';
@@ -30,6 +30,26 @@ const SLOT_META: Record<SlotKey, {
 const toIDR = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
+// === helpers type-safe ===
+function getMessage(x: unknown): string | undefined {
+  if (typeof x === 'object' && x !== null) {
+    const r = x as Record<string, unknown>;
+    if (typeof r.message === 'string') return r.message;
+  }
+  return undefined;
+}
+function getTicket(x: unknown): string | undefined {
+  if (typeof x === 'object' && x !== null) {
+    const r = x as Record<string, unknown>;
+    if (typeof r.ticket === 'string') return r.ticket;
+    if (typeof r.data === 'object' && r.data !== null) {
+      const d = r.data as Record<string, unknown>;
+      if (typeof d.ticket === 'string') return d.ticket;
+    }
+  }
+  return undefined;
+}
+
 export default function SponsorApplyForm() {
   const params = useSearchParams();
   const [isSubmitting, setSubmitting] = useState(false);
@@ -49,12 +69,10 @@ export default function SponsorApplyForm() {
     if (selected.section === 'cover') {
       return HARGA.cover[selected.key as 'IFC'|'IBC'|'BC_OUT'];
     }
-    // mapping size ke kunci harga isi
     const sizeKey = selected.key as 'FULL'|'HALF'|'QUARTER';
     return HARGA[kategoriParam][sizeKey];
   }, [selected, kategoriParam]);
 
-  // fallback UX kalau user belum pilih slot dari thumbnail
   if (!selected) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
@@ -71,10 +89,10 @@ export default function SponsorApplyForm() {
 
     const payload = {
       // metadata slot dari pilihan thumbnail
-      slot_key: selected.key,            // IFC / IBC / BC_OUT / FULL / HALF / QUARTER
-      slot_label: selected.label,        // Label enak dibaca
-      slot_section: selected.section,    // cover / inside
-      slot_size: selected.size,          // full / half / quarter
+      slot_key: selected.key,
+      slot_label: selected.label,
+      slot_section: selected.section,
+      slot_size: selected.size,
       slot_price: price ?? 0,            // FE hanya info; BE akan hitung ulang
       kategori: kategoriParam,           // perusahaan / lpk
 
@@ -124,20 +142,19 @@ export default function SponsorApplyForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload),
-        credentials: 'omit', // API public, tidak butuh cookie/CSRF
+        credentials: 'omit',
       });
 
-      // Parser respons yang tahan banting (kalau bukan JSON tetap kebaca)
       const raw = await res.text();
-      let out: any = null; try { out = JSON.parse(raw); } catch {}
+      let out: unknown = null; try { out = JSON.parse(raw); } catch {}
       console.log('[RESPONSE]', res.status, raw);
 
       if (!res.ok) {
-        const msg = out?.message || raw || `Gagal mengirim pengajuan sponsorship (HTTP ${res.status}).`;
-        throw new Error(msg);
+        const msg = getMessage(out) || raw || `Gagal mengirim pengajuan sponsorship (HTTP ${res.status}).`;
+        throw new Error(typeof msg === 'string' ? msg : String(msg));
       }
 
-      const ticket = out?.ticket ?? out?.data?.ticket ?? '—';
+      const ticket = getTicket(out) ?? '—';
       alert(
         `Terima kasih! Pengajuan tersimpan.\n` +
         `Ticket: ${ticket}\n` +
@@ -145,9 +162,10 @@ export default function SponsorApplyForm() {
       );
 
       form.reset();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[SPONSORSHIP_APPLY_ERROR]', err);
-      alert(err?.message || 'Terjadi kesalahan. Mohon coba lagi.');
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan. Mohon coba lagi.';
+      alert(msg);
     } finally {
       setSubmitting(false);
     }
