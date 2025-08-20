@@ -38,12 +38,9 @@ const IMAGES: Record<SlotId, string> = {
   QUARTER: "/QuarterPage.jpeg",
 };
 
-// form tetap client-only
-const SponsorApplyForm = dynamic(() => import("@/components/SponsorApplyForm"), {
-  ssr: false,
-});
+// form client-only
+const SponsorApplyForm = dynamic(() => import("@/components/SponsorApplyForm"), { ssr: false });
 
-/* ----------------------- INNER (pakai useSearchParams) ---------------------- */
 function ApplyPageInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -51,7 +48,7 @@ function ApplyPageInner() {
   const [kategori, setKategori] = useState<"perusahaan" | "lpk">("perusahaan");
   const [selected, setSelected] = useState<SlotId | null>(null);
 
-  // Prefill dari query (?slot=...&kategori=...)
+  // Prefill dari query (?slot & ?kategori)
   useEffect(() => {
     const slot = (params.get("slot") || "").toUpperCase() as SlotId;
     const kat = (params.get("kategori") || "").toLowerCase() as "perusahaan" | "lpk";
@@ -59,23 +56,20 @@ function ApplyPageInner() {
     if (valid.includes(slot)) setSelected(slot);
     if (kat === "perusahaan" || kat === "lpk") setKategori(kat);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once
+  }, []);
 
-  // Saat ganti kategori → update URL juga
+  // Ganti kategori => sinkronkan URL (biar form ikut reset via key)
   const changeKategori = (kat: "perusahaan" | "lpk") => {
     setKategori(kat);
     const p = new URLSearchParams(params.toString());
     p.set("kategori", kat);
     if (selected) p.set("slot", selected);
-    router.push(`/sponsorship/apply?${p.toString()}${selected ? "#apply-form" : ""}`, {
-      scroll: !!selected,
-    });
+    router.push(`/sponsorship/apply?${p.toString()}${selected ? "#apply-form" : ""}`, { scroll: !!selected });
   };
 
   const cards: SlotCardProps[] = useMemo(() => {
     const price = (id: SlotId) =>
       id === "IFC" || id === "IBC" || id === "BC_OUT" ? HARGA.cover[id] : HARGA[kategori][id];
-
     const size = (id: SlotId) =>
       id === "IFC" || id === "IBC" || id === "BC_OUT" ? COVER_SIZE : BASE_SIZES[id];
 
@@ -89,9 +83,8 @@ function ApplyPageInner() {
       priceLabel: `Rp ${price(id).toLocaleString("id-ID")}`,
       selected: selected === id,
       onSelect: setSelected,
-      // klik gambar = pilih + navigate ke form
-      navigateOnClick: true,
-      kategori, // dipakai SlotCard untuk menyusun URL
+      navigateOnClick: true, // klik gambar = pilih + scroll ke form
+      kategori,
     }));
   }, [kategori, selected]);
 
@@ -108,43 +101,33 @@ function ApplyPageInner() {
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <span className="text-[#7a6040]">Kategori:</span>
         <label className="inline-flex items-center gap-2">
-          <input
-            type="radio"
-            name="kat"
-            checked={kategori === "perusahaan"}
-            onChange={() => changeKategori("perusahaan")}
-          />
+          <input type="radio" name="kat" checked={kategori === "perusahaan"} onChange={() => changeKategori("perusahaan")} />
           Perusahaan
         </label>
         <label className="inline-flex items-center gap-2">
-          <input
-            type="radio"
-            name="kat"
-            checked={kategori === "lpk"}
-            onChange={() => changeKategori("lpk")}
-          />
+          <input type="radio" name="kat" checked={kategori === "lpk"} onChange={() => changeKategori("lpk")} />
           LPK/Sekolah
         </label>
       </div>
 
       {/* GRID SLOT */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+      <div id="grid-slots" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
         {cards.map((c) => (
           <SlotCard key={`${c.id}-${kategori}`} {...c} />
         ))}
       </div>
 
-      {/* DETAIL PANEL */}
+      {/* DETAIL: small preview + form lebar */}
       {selectedData ? (
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* KIRI: mockup/gambar */}
-          <div className="lg:col-span-2 rounded-2xl border border-[#eadcc6] bg-white p-3 shadow-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={selectedData.image} alt={selectedData.title} className="w-full rounded-xl" />
-          </div>
-
-          {/* KANAN: info detail + FORM (compact) */}
+          {/* Kartu kecil: preview & info slot (compact) */}
           <aside className="rounded-2xl border border-[#eadcc6] bg-[#fffaf0] p-5 h-fit">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={selectedData.image}
+              alt={selectedData.title}
+              className="w-full rounded-xl max-h-56 object-cover mb-3"
+            />
             <div className="text-sm font-semibold text-[#6b4a1a] mb-1">{selectedData.title}</div>
             <div className="text-[13px] text-[#7a6040]">
               Ukuran: <span className="font-medium text-[#4e3a18]">{selectedData.sizeCM}</span>{" "}
@@ -154,33 +137,15 @@ function ApplyPageInner() {
               {selectedData.priceLabel}{" "}
               {isCover && <span className="text-xs font-semibold text-[#7a6040]">(Cover • Premium)</span>}
             </div>
-
-            <p className="mt-3 text-sm text-[#4e3a1a]">
-              Contoh preview untuk membantu memperkirakan skala dan posisi. Layout final mengikuti template panitia buku
-              kenangan 50 tahun MPK-KAJ.
-            </p>
-
-            {/* ⬇️ Form compact langsung di panel kanan */}
-            <div className="mt-5">
-              <SponsorApplyForm compact />
-            </div>
-
-            {/* Kontak */}
-            <div className="mt-5 border-t border-[#eadcc6] pt-3 text-xs text-[#7a6040]">
-              <div className="font-semibold text-[#6b4a1a] mb-1">Kontak Panitia</div>
-              <a
-                href="https://wa.me/628161604132"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center text-green-600 hover:underline mb-1"
-              >
-                <span className="mr-2">🟢</span> 0816-1604-132
-              </a>
-              <a href="mailto:johannesromiyono@gmail.com" className="flex items-center text-blue-600 hover:underline">
-                <span className="mr-2">✉️</span> johannesromiyono@gmail.com
-              </a>
-            </div>
+            <a href="#grid-slots" className="mt-3 inline-block text-xs text-blue-600 hover:underline">
+              Ganti slot
+            </a>
           </aside>
+
+          {/* Form: lebar 2 kolom */}
+          <div className="lg:col-span-2">
+            <SponsorApplyForm compact />
+          </div>
         </section>
       ) : (
         <div className="mt-6 text-sm text-[#7a6040]">
@@ -191,7 +156,7 @@ function ApplyPageInner() {
   );
 }
 
-/* ------------------------------ PAGE WRAPPER ------------------------------- */
+/* Suspense wrapper */
 export default function ApplyPage() {
   return (
     <Suspense fallback={null}>
