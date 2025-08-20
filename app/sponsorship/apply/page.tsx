@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useMemo, useState, useEffect } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import SlotCard, { SlotCardProps } from "@/components/SlotCard";
 import dynamic from "next/dynamic";
@@ -62,7 +61,7 @@ function ApplyPageInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once
 
-  // Saat ganti kategori → update URL juga, supaya form & ringkasan ikut sinkron
+  // Saat ganti kategori → update URL juga
   const changeKategori = (kat: "perusahaan" | "lpk") => {
     setKategori(kat);
     const p = new URLSearchParams(params.toString());
@@ -90,7 +89,7 @@ function ApplyPageInner() {
       priceLabel: `Rp ${price(id).toLocaleString("id-ID")}`,
       selected: selected === id,
       onSelect: setSelected,
-      // ⬇️ penting: klik gambar langsung pilih + navigate + scroll ke form
+      // klik gambar = pilih + navigate ke form
       navigateOnClick: true,
       kategori, // dipakai SlotCard untuk menyusun URL
     }));
@@ -144,7 +143,7 @@ function ApplyPageInner() {
             <img src={selectedData.image} alt={selectedData.title} className="w-full rounded-xl" />
           </div>
 
-          {/* KANAN: info detail */}
+          {/* KANAN: info detail + FORM (compact) */}
           <aside className="rounded-2xl border border-[#eadcc6] bg-[#fffaf0] p-5 h-fit">
             <div className="text-sm font-semibold text-[#6b4a1a] mb-1">{selectedData.title}</div>
             <div className="text-[13px] text-[#7a6040]">
@@ -161,13 +160,9 @@ function ApplyPageInner() {
               kenangan 50 tahun MPK-KAJ.
             </p>
 
+            {/* ⬇️ Form compact langsung di panel kanan */}
             <div className="mt-5">
-              <Link
-                href={`/sponsorship/apply?slot=${selectedData.id}&kategori=${kategori}#apply-form`}
-                className="btn-primary w-full justify-center"
-              >
-                Pilih Slot Ini
-              </Link>
+              <SponsorApplyForm compact />
             </div>
 
             {/* Kontak */}
@@ -192,30 +187,11 @@ function ApplyPageInner() {
           Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.
         </div>
       )}
-
-      {/* FORM APPLY */}
-      <section id="apply-form" className="max-w-6xl mx-auto mt-12 scroll-mt-20">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold tracking-tight text-[#6b4a1a]">Form Pengajuan Sponsorship</h2>
-          <p className="text-sm text-[#7a6040] mt-1">
-            Pilihan slot & harga otomatis terisi dari pilihan thumbnail di atas. Jika belum memilih, form akan memberi
-            tahu.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-[#eadcc6] bg-white p-4 md:p-6 shadow-sm">
-          <SponsorApplyForm />
-        </div>
-      </section>
     </main>
   );
 }
 
 /* ------------------------------ PAGE WRAPPER ------------------------------- */
-/** Wajib: bungkus komponen yang memakai useSearchParams di dalam Suspense
- * agar aman saat prerender di Vercel (mengatasi error:
- * "useSearchParams() should be wrapped in a suspense boundary").
- */
 export default function ApplyPage() {
   return (
     <Suspense fallback={null}>
