@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import SlotCard, { SlotCardProps } from "@/components/SlotCard";
 import dynamic from "next/dynamic";
 
@@ -46,9 +46,11 @@ const SponsorApplyForm = dynamic(() => import("@/components/SponsorApplyForm"), 
 
 /* ----------------------- INNER (pakai useSearchParams) ---------------------- */
 function ApplyPageInner() {
+  const router = useRouter();
+  const params = useSearchParams();
+
   const [kategori, setKategori] = useState<"perusahaan" | "lpk">("perusahaan");
   const [selected, setSelected] = useState<SlotId | null>(null);
-  const params = useSearchParams();
 
   // Prefill dari query (?slot=...&kategori=...)
   useEffect(() => {
@@ -59,6 +61,17 @@ function ApplyPageInner() {
     if (kat === "perusahaan" || kat === "lpk") setKategori(kat);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once
+
+  // Saat ganti kategori → update URL juga, supaya form & ringkasan ikut sinkron
+  const changeKategori = (kat: "perusahaan" | "lpk") => {
+    setKategori(kat);
+    const p = new URLSearchParams(params.toString());
+    p.set("kategori", kat);
+    if (selected) p.set("slot", selected);
+    router.push(`/sponsorship/apply?${p.toString()}${selected ? "#apply-form" : ""}`, {
+      scroll: !!selected,
+    });
+  };
 
   const cards: SlotCardProps[] = useMemo(() => {
     const price = (id: SlotId) =>
@@ -77,6 +90,9 @@ function ApplyPageInner() {
       priceLabel: `Rp ${price(id).toLocaleString("id-ID")}`,
       selected: selected === id,
       onSelect: setSelected,
+      // ⬇️ penting: klik gambar langsung pilih + navigate + scroll ke form
+      navigateOnClick: true,
+      kategori, // dipakai SlotCard untuk menyusun URL
     }));
   }, [kategori, selected]);
 
@@ -97,12 +113,17 @@ function ApplyPageInner() {
             type="radio"
             name="kat"
             checked={kategori === "perusahaan"}
-            onChange={() => setKategori("perusahaan")}
+            onChange={() => changeKategori("perusahaan")}
           />
           Perusahaan
         </label>
         <label className="inline-flex items-center gap-2">
-          <input type="radio" name="kat" checked={kategori === "lpk"} onChange={() => setKategori("lpk")} />
+          <input
+            type="radio"
+            name="kat"
+            checked={kategori === "lpk"}
+            onChange={() => changeKategori("lpk")}
+          />
           LPK/Sekolah
         </label>
       </div>
@@ -167,7 +188,9 @@ function ApplyPageInner() {
           </aside>
         </section>
       ) : (
-        <div className="mt-6 text-sm text-[#7a6040]">Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.</div>
+        <div className="mt-6 text-sm text-[#7a6040]">
+          Klik salah satu thumbnail di atas untuk melihat harga & ukuran detail.
+        </div>
       )}
 
       {/* FORM APPLY */}

@@ -194,8 +194,12 @@ export default function SponsorApplyForm() {
       </aside>
 
       {/* Form */}
-      <section className="lg:col-span-2">
-        <form onSubmit={handleSubmit} className="rounded-2xl border bg-white p-6 shadow-sm">
+      <section id="apply-form" className="lg:col-span-2">
+        <form
+          key={`${selected.key}-${kategoriParam}`}   // ⬅️ auto-reset saat slot/kategori berubah
+          onSubmit={handleSubmit}
+          className="rounded-2xl border bg-white p-6 shadow-sm"
+        >
           <h2 className="text-xl font-semibold">Data Pengiklan</h2>
           <p className="text-sm text-slate-600 mb-4">Lengkapi data sesuai form panitia.</p>
 

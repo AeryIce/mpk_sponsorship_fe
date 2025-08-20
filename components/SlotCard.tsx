@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export interface SlotCardProps {
   id: "IFC" | "IBC" | "BC_OUT" | "FULL" | "HALF" | "QUARTER";
@@ -10,15 +11,40 @@ export interface SlotCardProps {
   priceLabel: string;  // contoh: "Rp 10.000.000"
   selected?: boolean;
   onSelect: (id: SlotCardProps["id"]) => void;
+
+  /** Opsional: kalau true, klik kartu akan langsung bawa ke halaman apply
+   *  dan men-scroll ke form (#apply-form). */
+  navigateOnClick?: boolean;
+  /** Dibutuhkan saat navigateOnClick=true, default "perusahaan" */
+  kategori?: "perusahaan" | "lpk";
 }
 
 export default function SlotCard({
   id, title, image, sizeMM, sizeCM, priceLabel, selected, onSelect,
+  navigateOnClick = false,
+  kategori = "perusahaan",
 }: SlotCardProps) {
+  const router = useRouter();
+  const params = useSearchParams();
+
+  const handleClick = () => {
+    // tetap jalankan logika lama (highlight/preview)
+    onSelect(id);
+
+    // jika diaktifkan, langsung arahkan ke halaman apply + anchor form
+    if (navigateOnClick) {
+      const p = new URLSearchParams(params.toString());
+      p.set("slot", id);
+      p.set("kategori", kategori);
+      // anchor agar scroll turun ke form
+      router.push(`/sponsorship/apply?${p.toString()}#apply-form`, { scroll: true });
+    }
+  };
+
   return (
     <button
       type="button"
-      onClick={() => onSelect(id)}
+      onClick={handleClick}
       className={[
         "group relative w-full overflow-hidden rounded-xl border transition-all text-left",
         selected
