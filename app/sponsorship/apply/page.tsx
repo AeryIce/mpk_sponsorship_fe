@@ -41,6 +41,9 @@ const IMAGES: Record<SlotId, string> = {
 // form client-only
 const SponsorApplyForm = dynamic(() => import("@/components/SponsorApplyForm"), { ssr: false });
 
+// toggle satu pintu kalau nanti mau diaktifkan lagi
+const LPK_DISABLED = true as const;
+
 function ApplyPageInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -51,15 +54,28 @@ function ApplyPageInner() {
   // Prefill dari query (?slot & ?kategori)
   useEffect(() => {
     const slot = (params.get("slot") || "").toUpperCase() as SlotId;
-    const kat = (params.get("kategori") || "").toLowerCase() as "perusahaan" | "lpk";
+    let kat = (params.get("kategori") || "").toLowerCase() as "perusahaan" | "lpk";
+
     const valid: SlotId[] = ["IFC", "IBC", "BC_OUT", "FULL", "HALF", "QUARTER"];
     if (valid.includes(slot)) setSelected(slot);
+
+    // paksa ke 'perusahaan' jika LPK nonaktif
+    if (LPK_DISABLED && kat === "lpk") {
+      kat = "perusahaan";
+      const p = new URLSearchParams(params.toString());
+      p.set("kategori", kat);
+      if (slot) p.set("slot", slot);
+      router.replace(`/sponsorship/apply?${p.toString()}${slot ? "#apply-form" : ""}`);
+    }
     if (kat === "perusahaan" || kat === "lpk") setKategori(kat);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ganti kategori => sinkronkan URL (biar form ikut reset via key)
   const changeKategori = (kat: "perusahaan" | "lpk") => {
+    // jika LPK nonaktif, abaikan permintaan ganti ke lpk
+    if (LPK_DISABLED && kat === "lpk") return;
+
     setKategori(kat);
     const p = new URLSearchParams(params.toString());
     p.set("kategori", kat);
@@ -100,13 +116,41 @@ function ApplyPageInner() {
       {/* Kategori harga */}
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <span className="text-[#7a6040]">Kategori:</span>
+
+        {/* Perusahaan (aktif) */}
         <label className="inline-flex items-center gap-2">
-          <input type="radio" name="kat" checked={kategori === "perusahaan"} onChange={() => changeKategori("perusahaan")} />
+          <input
+            type="radio"
+            name="kat"
+            checked={kategori === "perusahaan"}
+            onChange={() => changeKategori("perusahaan")}
+          />
           Perusahaan
         </label>
-        <label className="inline-flex items-center gap-2">
-          <input type="radio" name="kat" checked={kategori === "lpk"} onChange={() => changeKategori("lpk")} />
-          LPK/Sekolah
+
+        {/* LPK/Sekolah (dinonaktifkan cantik) */}
+        <label
+          className={`inline-flex items-center gap-2 ${
+            LPK_DISABLED ? "text-[#b6a389] cursor-not-allowed" : ""
+          }`}
+          title={LPK_DISABLED ? "Sementara nonaktif" : ""}
+          aria-disabled={LPK_DISABLED}
+        >
+          <input
+            type="radio"
+            name="kat"
+            checked={kategori === "lpk"}
+            onChange={() => changeKategori("lpk")}
+            disabled={LPK_DISABLED}
+          />
+          <span className="flex items-center gap-2">
+            LPK/Sekolah
+            {LPK_DISABLED && (
+              <span className="rounded-full border border-[#eadcc6] bg-[#fff7ea] px-2 py-0.5 text-[10px] font-semibold text-[#a4875f]">
+                Nonaktif
+              </span>
+            )}
+          </span>
         </label>
       </div>
 
